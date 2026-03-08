@@ -13,16 +13,7 @@
 
 namespace CommandMount {
     
-    struct MountedPartition {
-        std::string path;
-        std::string name;
-        std::string id;
-        char type;
-        int start;
-        int size;
-    };
-    
-    static std::map<std::string, MountedPartition> mountedPartitions;
+    inline static std::map<std::string, MountedPartition> mountedPartitions;
     
     static std::map<std::string, char> diskLetters;
     

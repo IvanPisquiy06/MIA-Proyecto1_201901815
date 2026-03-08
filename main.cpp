@@ -10,6 +10,12 @@
 #include "rmdisk.h"
 #include "fdisk.h"
 #include "mount.h"
+#include "mkfs.h"
+#include "login.h"
+#include "logout.h"
+#include "cat.h"
+#include "mkgrp.h"
+#include "mkusr.h"
 
 
 // Función para convertir string a minúsculas
@@ -213,6 +219,78 @@ std::string executeCommand(const std::string& commandLine) {
         // Mostrar todas las particiones montadas
         return CommandMount::listMountedPartitions();
 
+    } else if(cmd == "mkfs") {
+        std::string id = parseParameter(commandLine, "-id");
+        std::string type = parseParameter(commandLine, "-type");
+
+        if (id.empty()) {
+            return "Error: mfks requiere el parámetro -id\n"
+                   "Uso: mfks -id=ID -type=[full]";
+        }
+
+        if (!type.empty() && type != "full") {
+            return "Error: El parámetro -type debe ser 'full'";
+        }
+
+        return CommandMkfs::execute(id, type);
+
+    } else if (cmd == "cat") {
+        std::vector<std::string> files;
+        int i = 1;
+
+        while (true) {
+            std::string paramName = "-file" + std::to_string(i);
+            std::string filepath = parseParameter(commandLine, paramName);
+            
+            if (filepath.empty()) {
+                break; 
+            }
+            
+            files.push_back(filepath);
+            i++;
+        }
+
+        if (files.empty()) {
+            return "Error: cat requiere al menos un parámetro -file1\n"
+                "Uso: cat -file1=/ruta/del/archivo [-file2=/ruta2 ...]";
+        }
+
+        return CommandCat::execute(files);
+    } else if (cmd == "login") {
+        std::string user = parseParameter(commandLine, "-user");
+        std::string pass = parseParameter(commandLine, "-pass");
+        std::string id = parseParameter(commandLine, "-id");
+
+        if (user.empty() || pass.empty() || id.empty()) {
+            return "Error: login requiere los parámetros -user, -pass e -id\n"
+                   "Uso: login -user=usuario -pass=contraseña -id=ID";
+        }
+
+        return CommandLogin::execute(user, pass, id);
+
+    } else if (cmd == "logout") {
+        return CommandLogout::execute();
+
+    } else if (cmd == "mkgrp") {
+        std::string name = parseParameter(commandLine, "-name");
+
+        if (name.empty()) {
+            return "Error: mkgrp requiere el parámetro -name\n"
+                   "Uso: mkgrp -name=nombre_del_grupo";
+        }
+
+        return CommandMkgrp::execute(name);
+    } else if (cmd == "mkusr"){
+        std::string user = parseParameter(commandLine, "-user");
+        std::string pass = parseParameter(commandLine, "-pass");
+        std::string group = parseParameter(commandLine, "-group");
+
+        if (user.empty() || pass.empty() || group.empty()) {
+            return "Error: mkusr requiere los parámetros -user, -pass y -group\n"
+                   "Uso: mkusr -user=usuario -pass=contraseña -group=grupo";
+        }
+
+        return CommandMkusr::execute(user, pass, group);
     } else if (cmd == "exit" || cmd == "quit") {
         return "EXIT";
     } else if (cmd.empty()) {

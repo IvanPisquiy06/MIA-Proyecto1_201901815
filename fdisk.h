@@ -1,12 +1,12 @@
 #ifndef FDISK_H  
 #define FDISK_H   
 
-#include <string>    // Manipula cadenas de texto
-#include <iostream>  // Maneja entrada y salida estándar
-#include <fstream>   // Proporciona funcionalidades para trabajar con archivos (lectura y escritura).
-#include <cstring>   // Manipula cadenas C-style
-#include <cstdlib>   // funciones generales como el rand() y conversiones de cadenas a números.
-#include "structures.h" // estructuras de datos.
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <cstring>
+#include <cstdlib>
+#include "structures.h"
 
 
 namespace CommandFdisk {
