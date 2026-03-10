@@ -11,7 +11,6 @@
 #include "structures.h"
 #include "mount.h"
 #include "cat.h"
-#include "login.h"
 
 namespace CommandMkgrp {
 
@@ -22,15 +21,15 @@ namespace CommandMkgrp {
             if (name.length() > 10) return "Error: El nombre del grupo no puede exceder 10 caracteres.";
 
             // 2. Validar sesión de 'root'
-            if (!CommandLogin::currentSession.is_logged_in) {
+            if (!::getSession().is_logged_in) {
                 return "Error: No hay una sesión activa. Use login primero.";
             }
-            if (CommandLogin::currentSession.username != "root") {
+            if (::getSession().username != "root") {
                 return "Error: Solo el usuario 'root' puede crear grupos.";
             }
 
             // 3. Obtener partición actual
-            std::string id = CommandLogin::currentSession.partition_id;
+            std::string id = ::getSession().partition_id;
             MountedPartition partition;
             bool encontrada = false;
             for (const auto& p : CommandMount::mountedPartitions) {

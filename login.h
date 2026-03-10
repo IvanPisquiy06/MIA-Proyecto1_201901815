@@ -12,16 +12,7 @@
 
 namespace CommandLogin {
 
-    // 1. Estructura para mantener la sesión activa en toda la aplicación
-    struct ActiveSession {
-        bool is_logged_in = false;
-        std::string username;
-        int uid;
-        int gid;
-        std::string partition_id;
-    };
-
-    // 2. Ejecución del comando
+    // Ejecución del comando
     inline std::string execute(const std::string& user, const std::string& pass, const std::string& id) {
         try {
             // Validaciones iniciales
@@ -112,8 +103,6 @@ namespace CommandLogin {
                         getSession().is_logged_in = true;
                         getSession().username = user;
                         getSession().uid = std::stoi(tokens[0]);
-                        // El GID normalmente requeriría buscar el grupo en el mismo archivo, 
-                        // pero por simplicidad asignamos el mismo del UID temporalmente o 1 (root)
                         getSession().gid = std::stoi(tokens[0]); 
                         getSession().partition_id = id;
                         loginSuccess = true;

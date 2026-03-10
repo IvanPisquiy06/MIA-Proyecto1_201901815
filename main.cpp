@@ -16,6 +16,10 @@
 #include "cat.h"
 #include "mkgrp.h"
 #include "mkusr.h"
+#include "rmgrp.h"
+#include "rmusr.h"
+#include "chgrp.h"
+#include "mkfile.h"
 
 
 // Función para convertir string a minúsculas
@@ -291,6 +295,45 @@ std::string executeCommand(const std::string& commandLine) {
         }
 
         return CommandMkusr::execute(user, pass, group);
+    } else if (cmd == "rmgrp") {
+        std::string name = parseParameter(commandLine, "-name");
+
+        if (name.empty()) {
+            return "Error: rmgrp requiere el parámetro -name\n"
+                   "Uso: rmgrp -name=nombre_del_grupo";
+        }
+
+        return CommandRmgrp::execute(name);
+    } else if (cmd == "rmusr") {
+        std::string user = parseParameter(commandLine, "-user");
+
+        if (user.empty()) {
+            return "Error: rmusr requiere el parámetro -user\n"
+                   "Uso: rmusr -user=nombre_del_usuario";
+        }
+
+        return CommandRmusr::execute(user);
+    } else if (cmd == "chgrp") {
+        std::string user = parseParameter(commandLine, "-user");
+        std::string group = parseParameter(commandLine, "-group");
+
+        if (user.empty() || group.empty()) {
+            return "Error: chgrp requiere los parámetros -user y -group\n"
+                   "Uso: chgrp -user=usuario -group=grupo";
+        }
+
+        return CommandChgrp::execute(user, group);
+    } else if (cmd == "mkfile") {
+        std::string path = parseParameter(commandLine, "-path");
+        int size = std::stoi(parseParameter(commandLine, "-size"));
+        std::string content = parseParameter(commandLine, "-cont");
+
+        if (path.empty()) {
+            return "Error: mkfile requiere el parámetro -path\n"
+                   "Uso: mkfile -path=/ruta/del/archivo [-size=tamaño] [-cont=contenido]";
+        }
+
+        return CommandMkfile::execute(path, size, content);
     } else if (cmd == "exit" || cmd == "quit") {
         return "EXIT";
     } else if (cmd.empty()) {

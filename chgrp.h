@@ -1,5 +1,5 @@
-#ifndef MKUSR_H
-#define MKUSR_H
+#ifndef CHGRP_H
+#define CHGRP_H
 
 #include <iostream>
 #include <string>
@@ -8,33 +8,29 @@
 #include <fstream>
 #include <cmath>
 #include <ctime>
+#include <cstring>
 #include "structures.h"
 #include "mount.h"
 #include "cat.h"
-#include "login.h"
 
-namespace CommandMkusr {
+namespace CommandChgrp {
 
-    inline std::string execute(const std::string& user, const std::string& pwd, const std::string& grp) {
+    inline std::string execute(const std::string& user, const std::string& grp) {
         try {
-            // 1. Validaciones iniciales de parámetros
-            if (user.empty() || pwd.empty() || grp.empty()) {
-                return "Error: Los parámetros -user, -pass y -grp son obligatorios.";
+            // 1. Validaciones iniciales
+            if (user.empty() || grp.empty()) {
+                return "Error: Los parámetros -user y -grp son obligatorios.";
             }
-            if (user.length() > 10) return "Error: El nombre de usuario no puede exceder 10 caracteres.";
-            if (pwd.length() > 10) return "Error: La contraseña no puede exceder 10 caracteres.";
-            if (grp.length() > 10) return "Error: El nombre del grupo no puede exceder 10 caracteres.";
 
-            // 2. Validar sesión activa y permisos de root
-            if (!getSession().is_logged_in) {
+            if (!::getSession().is_logged_in) {
                 return "Error: No hay una sesión activa. Use login primero.";
             }
-            if (getSession().username != "root") {
-                return "Error: Solo el usuario 'root' puede crear nuevos usuarios.";
+            if (::getSession().username != "root") {
+                return "Error: Solo el usuario 'root' puede cambiar grupos de usuarios.";
             }
 
-            // 3. Obtener la partición actual
-            std::string id = getSession().partition_id;
+            // 2. Obtener partición actual
+            std::string id = ::getSession().partition_id;
             MountedPartition partition;
             bool encontrada = false;
             for (const auto& p : CommandMount::mountedPartitions) {
@@ -46,15 +42,14 @@ namespace CommandMkusr {
             }
             if (!encontrada) return "Error: Partición con ID " + id + " no montada.";
 
-            // Abrir el disco
             std::fstream file(partition.path, std::ios::in | std::ios::out | std::ios::binary);
             if (!file.is_open()) return "Error: No se pudo abrir el disco.";
 
-            // 4. Cargar Superbloque e Inodo de users.txt
             Superblock sb;
             file.seekg(partition.start, std::ios::beg);
             file.read(reinterpret_cast<char*>(&sb), sizeof(Superblock));
 
+            // 3. Buscar y cargar el Inodo de users.txt
             int usersInodeIndex = CommandCat::getInodeByPath(file, sb, "users.txt");
             if (usersInodeIndex == -1) return "Error Crítico: No se encontró /users.txt.";
 
@@ -62,7 +57,7 @@ namespace CommandMkusr {
             file.seekg(sb.s_inode_start + (usersInodeIndex * sizeof(Inode)), std::ios::beg);
             file.read(reinterpret_cast<char*>(&usersInode), sizeof(Inode));
 
-            // 5. Leer todo el contenido de users.txt
+            // 4. Leer todo el contenido de users.txt
             std::string content = "";
             int bytesRead = 0;
             for (int b = 0; b < 12; b++) {
@@ -78,14 +73,38 @@ namespace CommandMkusr {
                 }
             }
 
-            // 6. Analizar el contenido: validar grupo, usuario y buscar próximo UID
-            std::stringstream ss(content);
+            // 5. PASADA 1: Validar que el nuevo grupo exista y esté activo
+            std::stringstream ss1(content);
             std::string line;
-            int maxUid = 0;
             bool groupExists = false;
 
-            while (std::getline(ss, line, '\n')) {
-                if (line.empty() || line[0] == '0') continue; // Ignorar eliminados
+            while (std::getline(ss1, line, '\n')) {
+                if (line.empty()) continue;
+                std::vector<std::string> tokens;
+                std::stringstream lineStream(line);
+                std::string token;
+                while (std::getline(lineStream, token, ',')) {
+                    tokens.push_back(token);
+                }
+                
+                // Si es un grupo activo (ID != 0) y su nombre coincide con 'grp'
+                if (tokens.size() >= 3 && tokens[1] == "G" && tokens[2] == grp && tokens[0] != "0") {
+                    groupExists = true;
+                    break;
+                }
+            }
+
+            if (!groupExists) {
+                return "Error: El grupo '" + grp + "' no existe o fue eliminado.";
+            }
+
+            // 6. PASADA 2: Analizar y reconstruir el contenido (Cambiar grupo)
+            std::stringstream ss2(content);
+            std::string newContent = "";
+            bool userFound = false;
+
+            while (std::getline(ss2, line, '\n')) {
+                if (line.empty()) continue;
 
                 std::vector<std::string> tokens;
                 std::stringstream lineStream(line);
@@ -94,44 +113,38 @@ namespace CommandMkusr {
                     tokens.push_back(token);
                 }
 
-                // Verificar si el grupo existe (Tipo 'G')
-                if (tokens.size() >= 3 && tokens[1] == "G" && tokens[2] == grp) {
-                    groupExists = true;
-                }
-
-                // Verificar si el usuario ya existe y buscar el ID más alto (Tipo 'U')
-                if (tokens.size() >= 5 && tokens[1] == "U") {
-                    int currentUid = std::stoi(tokens[0]);
-                    if (currentUid > maxUid) maxUid = currentUid;
-
-                    if (tokens[3] == user) {
-                        return "Error: El usuario '" + user + "' ya existe.";
+                // Formato: UID,Tipo(U),Grupo,Usuario,Contraseña
+                if (tokens.size() >= 5 && tokens[1] == "U" && tokens[3] == user) {
+                    if (tokens[0] == "0") {
+                        return "Error: El usuario '" + user + "' fue eliminado previamente.";
                     }
+                    
+                    // Modificamos la 3ra columna (índice 2) por el nuevo grupo
+                    newContent += tokens[0] + ",U," + grp + "," + tokens[3] + "," + tokens[4] + "\n";
+                    userFound = true;
+                } else {
+                    // Si no es el usuario, copiamos la línea tal cual
+                    newContent += line + "\n";
                 }
             }
 
-            if (!groupExists) {
-                return "Error: El grupo '" + grp + "' no existe. Debe crearlo primero con mkgrp.";
+            if (!userFound) {
+                return "Error: El usuario '" + user + "' no existe.";
             }
 
-            // 7. Construir la nueva línea y agregarla al texto
-            // Formato: UID,Tipo,Grupo,Usuario,Contraseña
-            std::string newUserLine = std::to_string(maxUid + 1) + ",U," + grp + "," + user + "," + pwd + "\n";
-            content += newUserLine;
-
-            // 8. Escribir el nuevo contenido en los bloques (asignando nuevos si es necesario)
+            // 7. Escribir el nuevo texto de regreso a los bloques
             int bytesWritten = 0;
-            int totalBytes = content.length();
+            int totalBytes = newContent.length();
             int requiredBlocks = std::ceil((double)totalBytes / 64.0);
 
             if (requiredBlocks > 12) {
-                return "Error: Archivo users.txt excedió los 12 bloques directos (No soportado aún).";
+                return "Error: Archivo users.txt excedió los 12 bloques directos.";
             }
 
             for (int b = 0; b < requiredBlocks; b++) {
                 int blockIndex = usersInode.i_block[b];
                 
-                // Si necesitamos un bloque nuevo
+                // Si por alguna razón se necesita un bloque nuevo al reescribir
                 if (blockIndex == -1) {
                     char bit;
                     int freeBlockIndex = -1;
@@ -143,7 +156,6 @@ namespace CommandMkusr {
                             break;
                         }
                     }
-
                     if (freeBlockIndex == -1) return "Error: No hay bloques libres en el sistema.";
 
                     char ocupado = '1';
@@ -161,14 +173,14 @@ namespace CommandMkusr {
                 FileBlock newBlock;
                 memset(newBlock.b_content, 0, 64);
                 for (int c = 0; c < 64 && bytesWritten < totalBytes; c++) {
-                    newBlock.b_content[c] = content[bytesWritten++];
+                    newBlock.b_content[c] = newContent[bytesWritten++];
                 }
 
                 file.seekp(sb.s_block_start + (blockIndex * sizeof(FileBlock)), std::ios::beg);
                 file.write(reinterpret_cast<char*>(&newBlock), sizeof(FileBlock));
             }
 
-            // 9. Actualizar y guardar el Inodo
+            // 8. Guardar el inodo actualizado
             usersInode.i_size = totalBytes;
             usersInode.i_mtime = time(nullptr);
             file.seekp(sb.s_inode_start + (usersInodeIndex * sizeof(Inode)), std::ios::beg);
@@ -176,12 +188,12 @@ namespace CommandMkusr {
 
             file.close();
 
-            return "Usuario '" + user + "' creado exitosamente en el grupo '" + grp + "'.";
+            return "Grupo del usuario '" + user + "' actualizado a '" + grp + "' exitosamente.";
 
         } catch (const std::exception& e) {
-            return std::string("Error fatal en mkusr: ") + e.what();
+            return std::string("Error fatal en chgrp: ") + e.what();
         }
     }
 }
 
-#endif // MKUSR_H
+#endif // CHGRP_H
