@@ -8,7 +8,7 @@
 #include <fstream>
 #include <cmath>
 #include <ctime>
-#include "structures.h"
+#include "../core/structures.h"
 #include "mount.h"
 #include "cat.h"
 #include "login.h"

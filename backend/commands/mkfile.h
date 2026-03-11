@@ -9,7 +9,7 @@
 #include <cmath>
 #include <ctime>
 #include <cstring>
-#include "structures.h"
+#include "../core/structures.h"
 #include "mount.h"
 
 namespace CommandMkfile {

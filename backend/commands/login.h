@@ -6,9 +6,9 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
-#include "structures.h"
+#include "../core/structures.h"
 #include "mount.h"
-#include "cat.h" // Usamos tu buscador de Inodos que hicimos en CAT
+#include "cat.h"
 
 namespace CommandLogin {
 

@@ -5,22 +5,22 @@
 #include <ctime>
 #include <algorithm>
 #include <cctype>
-#include "structures.h"
-#include "mkdisk.h"
-#include "rmdisk.h"
-#include "fdisk.h"
-#include "mount.h"
-#include "mkfs.h"
-#include "login.h"
-#include "logout.h"
-#include "cat.h"
-#include "mkgrp.h"
-#include "mkusr.h"
-#include "rmgrp.h"
-#include "rmusr.h"
-#include "chgrp.h"
-#include "mkfile.h"
-#include "mkdir.h"
+#include "../core/structures.h"
+#include "../commands/mkdisk.h"
+#include "../commands/rmdisk.h"
+#include "../commands/fdisk.h"
+#include "../commands/mount.h"
+#include "../commands/mkfs.h"
+#include "../commands/login.h"
+#include "../commands/logout.h"
+#include "../commands/cat.h"
+#include "../commands/mkgrp.h"
+#include "../commands/mkusr.h"
+#include "../commands/rmgrp.h"
+#include "../commands/rmusr.h"
+#include "../commands/chgrp.h"
+#include "../commands/mkfile.h"
+#include "../commands/mkdir.h"
 
 
 // Función para convertir string a minúsculas

@@ -9,7 +9,7 @@
 #include <fstream>
 #include <cstring>
 #include <algorithm>
-#include "structures.h"
+#include "../core/structures.h"
 
 namespace CommandMount {
     

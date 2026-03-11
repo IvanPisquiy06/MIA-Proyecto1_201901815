@@ -6,7 +6,7 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
-#include "structures.h"
+#include "../core/structures.h"
 #include "mount.h"
 
 namespace CommandCat {

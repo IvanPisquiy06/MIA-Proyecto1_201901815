@@ -9,7 +9,7 @@
 #include <cstdlib>       // funciones generales como rand() y conversiones de cadenas a números.
 #include <cstdio>        // funciones para trabajar con archivos en estilo C
 #include <filesystem>    // Proporciona funciones para trabajar con el sistema de archivos (archivos, directorios).
-#include "structures.h"  // Define estructuras de datos personalizadas.
+#include "../core/structures.h"  // Define estructuras de datos personalizadas.
 
 namespace CommandRmdisk {
     

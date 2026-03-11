@@ -6,7 +6,7 @@
 #include <fstream>
 #include <cstring>
 #include <cstdlib>
-#include "structures.h"
+#include "../core/structures.h"
 
 
 namespace CommandFdisk {

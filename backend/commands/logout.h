@@ -3,7 +3,7 @@
 
 #include <string>
 #include "login.h"
-#include "structures.h"
+#include "../core/structures.h"
 
 namespace CommandLogout {
     inline std::string execute() {

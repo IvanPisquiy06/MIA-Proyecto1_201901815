@@ -7,7 +7,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <filesystem>
-#include "structures.h"
+#include "../core/structures.h"
 
 
 namespace CommandMkdisk {
