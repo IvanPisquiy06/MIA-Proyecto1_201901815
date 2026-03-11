@@ -20,6 +20,7 @@
 #include "rmusr.h"
 #include "chgrp.h"
 #include "mkfile.h"
+#include "mkdir.h"
 
 
 // Función para convertir string a minúsculas
@@ -325,15 +326,24 @@ std::string executeCommand(const std::string& commandLine) {
         return CommandChgrp::execute(user, group);
     } else if (cmd == "mkfile") {
         std::string path = parseParameter(commandLine, "-path");
-        int size = std::stoi(parseParameter(commandLine, "-size"));
-        std::string content = parseParameter(commandLine, "-cont");
-
-        if (path.empty()) {
-            return "Error: mkfile requiere el parámetro -path\n"
-                   "Uso: mkfile -path=/ruta/del/archivo [-size=tamaño] [-cont=contenido]";
+        std::string sizeStr = parseParameter(commandLine, "-size");
+        std::string rStr = parseParameter(commandLine, "-r"); 
+        std::string cont = parseParameter(commandLine, "-cont");
+        
+        int size = sizeStr.empty() ? 0 : std::stoi(sizeStr);
+        bool isRecursive = !rStr.empty() || commandLine.find("-r") != std::string::npos; 
+        
+        return CommandMkfile::execute(path, isRecursive, size, cont);
+    } else if (cmd == "mkdir") {
+        std::string path = parseParameter(commandLine, "-path");
+        
+        if (commandLine.find("-p=") != std::string::npos) {
+            return "Error: El parámetro -p no debe recibir ningún valor.";
         }
 
-        return CommandMkfile::execute(path, size, content);
+        bool hasP = commandLine.find("-p") != std::string::npos; 
+        
+        return CommandMkdir::execute(path, hasP);
     } else if (cmd == "exit" || cmd == "quit") {
         return "EXIT";
     } else if (cmd.empty()) {
