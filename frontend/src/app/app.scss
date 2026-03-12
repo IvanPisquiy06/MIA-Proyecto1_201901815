@@ -1,0 +1,122 @@
+:host {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #121212;
+    height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.terminal-container {
+    width: 100%;
+    max-width: 1000px;
+    height: 90vh;
+    background-color: #000000;
+    border: 1px solid #333;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.header {
+    background-color: #1e1e1e;
+    padding: 12px;
+    border-bottom: 1px solid #333;
+    color: #cccccc;
+    text-align: center;
+}
+
+.header h1 { 
+    margin: 0; 
+    font-size: 1.2rem; 
+    letter-spacing: 1px;
+}
+
+.output-area {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-height: 0;
+    max-height: 300px;
+    padding: 20px;
+    overflow-y: auto;
+    color: #00ff00;
+}
+
+.output-area pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 1.05rem;
+    line-height: 1.4;
+}
+
+.output-area::-webkit-scrollbar {
+  width: 10px;
+}
+
+.output-area::-webkit-scrollbar-track {
+  background: #0a0a0a; 
+  border-left: 1px solid #333;
+}
+
+.output-area::-webkit-scrollbar-thumb {
+  background: #005500;
+  border-radius: 5px;
+}
+
+.output-area::-webkit-scrollbar-thumb:hover {
+  background: #00ff00;
+}
+
+.input-area {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #0a0a0a;
+    border-top: 1px solid #333;
+}
+
+.prompt-symbol {
+    color: #00ff00;
+    margin-right: 15px;
+    font-weight: bold;
+    font-size: 1.3rem;
+}
+
+input {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    color: #00ff00;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.05rem;
+    outline: none;
+}
+
+input::placeholder {
+    color: #005500;
+}
+
+button {
+    background-color: #1e1e1e;
+    color: #00ff00;
+    border: 1px solid #00ff00;
+    padding: 8px 20px;
+    margin-left: 15px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: inherit;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+button:hover { 
+    background-color: #00ff00; 
+    color: #000000;
+}
