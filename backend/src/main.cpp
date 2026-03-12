@@ -21,6 +21,7 @@
 #include "../commands/chgrp.h"
 #include "../commands/mkfile.h"
 #include "../commands/mkdir.h"
+#include "httplib.h"
 
 
 // Función para convertir string a minúsculas
@@ -354,42 +355,51 @@ std::string executeCommand(const std::string& commandLine) {
 }
 
 int main(int argc, char* argv[]) {
-    // Inicializar semilla para números aleatorios
     srand(time(nullptr));
 
-    std::cout << "C++ DISK\n";
-    std::cout << "MIA Proyecto 1 - 2026\n";
-    std::cout << "Escriba 'exit' para salir\n";
+    std::cout << "======================================\n";
+    std::cout << "        C++ DISK - BACKEND API        \n";
+    std::cout << "        MIA Proyecto 1 - 2026         \n";
+    std::cout << "======================================\n";
+    std::cout << "Inicializando servidor web...\n";
 
-    std::string commandLine;
-    
-    while (true) {
-        std::cout << "> ";
-        std::cout.flush(); 
+    // Se crea el servidor
+    httplib::Server svr;
+
+    svr.Post("/api/execute", [](const httplib::Request &req, httplib::Response &res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+        res.set_header("Access-Control-Allow-Headers", "Content-Type");
+
+        std::string commandLine = req.body;
         
-        if (!std::getline(std::cin, commandLine)) {
-
-            std::cout << "\nSaliendo del programa...\n";
-            break;
-        }
-
         if (commandLine.empty()) {
-            continue;
+            res.set_content("Error: Comando vacío.", "text/plain");
+            return;
         }
 
-        // Ejecutar comando
+        std::cout << "\n[Frontend] Comando recibido: " << commandLine << std::endl;
+
         std::string result = executeCommand(commandLine);
 
         if (result == "EXIT") {
-            std::cout << "Saliendo del programa...\n";
-            break;
+            result = "Comando de salida recibido. El servidor sigue en línea pero la sesión terminó.";
         }
 
-        // Mostrar resultado
-        if (!result.empty()) {
-            std::cout << result << "\n\n";
-        }
-    }
+        res.set_content(result, "text/plain");
+        std::cout << "[Backend] Respuesta enviada a Angular." << std::endl;
+    });
+
+    svr.Options("/api/execute", [](const httplib::Request &req, httplib::Response &res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+        res.set_header("Access-Control-Allow-Headers", "Content-Type");
+    });
+
+    std::cout << "Servidor en linea en http://localhost:8080\n";
+    std::cout << "Presiona Ctrl+C en esta terminal para apagarlo.\n";
+    
+    svr.listen("0.0.0.0", 8080);
 
     return 0;
 }
