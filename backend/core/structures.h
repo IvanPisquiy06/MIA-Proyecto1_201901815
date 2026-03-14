@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <cstring>
+#include <string>
 
 struct Partition {
     char part_status;

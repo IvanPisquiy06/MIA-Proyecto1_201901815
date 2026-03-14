@@ -21,6 +21,7 @@
 #include "../commands/chgrp.h"
 #include "../commands/mkfile.h"
 #include "../commands/mkdir.h"
+#include "../commands/rep.h"
 #include "httplib.h"
 
 
@@ -345,7 +346,20 @@ std::string executeCommand(const std::string& commandLine) {
         bool hasP = commandLine.find("-p") != std::string::npos; 
         
         return CommandMkdir::execute(path, hasP);
-    } else if (cmd == "exit" || cmd == "quit") {
+    } else if( cmd == "rep") {
+        std::string name = parseParameter(commandLine, "-name");
+        std::string path = parseParameter(commandLine, "-path");
+        std::string id = parseParameter(commandLine, "-id");
+        std::string pathFileLs = parseParameter(commandLine, "-filels");
+
+        if (name.empty() || path.empty() || id.empty()) {
+            return "Error: rep requiere los parámetros -name, -path e -id\n"
+                   "Uso: rep -name=nombre_del_reporte -path=ruta_de_salida -id=ID";
+        }
+
+        return CommandRep::execute(name, path, id, pathFileLs);
+    }
+    else if (cmd == "exit" || cmd == "quit") {
         return "EXIT";
     } else if (cmd.empty()) {
         return "";
