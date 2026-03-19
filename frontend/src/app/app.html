@@ -10,12 +10,21 @@
   <div class="input-area">
     <span class="cmd-symb">></span>
     <input
-    type="text"
-    [(ngModel)]="input"
-    (keyup.enter)="executeCommand()"
-    placeholder="Esperando comando..."
-    autofocus
+      type="text"
+      [(ngModel)]="input"
+      (keyup.enter)="executeCommand()"
+      placeholder="Esperando comando..."
+      autofocus
     />
     <button (click)="executeCommand()">Ejecutar</button>
+    
+    <input 
+      type="file" 
+      #fileInput 
+      (change)="onFileSelected($event)" 
+      accept=".txt" 
+      style="display: none;"
+    />
+    <button class="btn-script" (click)="triggerFileInput()">📁 Script</button>
   </div>
 </main>

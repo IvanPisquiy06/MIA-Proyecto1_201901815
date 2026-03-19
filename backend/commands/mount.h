@@ -17,10 +17,8 @@ namespace CommandMount {
     
     static std::map<std::string, char> diskLetters;
     
-    // Contador para la siguiente letra de disco disponible
-    static char nextDiskLetter = 'a';
+    static char nextDiskLetter = 'A';
     
-    // Función auxiliar para expandir ~ a home directory
     inline std::string expandPath(const std::string& path) {
         if (path.empty() || path[0] != '~') {
             return path;
@@ -97,11 +95,9 @@ namespace CommandMount {
         return false;
     }
     
-    // Función para generar el ID de montaje
     inline std::string generateMountID(const std::string& path) {
         char diskLetter;
         
-        // Verificar si el disco ya tiene una letra asignada
         auto it = diskLetters.find(path);
         if (it != diskLetters.end()) {
             diskLetter = it->second;
@@ -118,8 +114,8 @@ namespace CommandMount {
         }
         
         std::string mountID = "15";
-        mountID += diskLetter;
         mountID += std::to_string(partitionNumber);
+        mountID += diskLetter;
         
         return mountID;
     }

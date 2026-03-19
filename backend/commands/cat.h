@@ -169,8 +169,7 @@ namespace CommandCat {
 
             file.close();
 
-            std::cout << output;
-            return "Comando CAT ejecutado exitosamente.";
+            return output;
 
         } catch (const std::exception& e) {
             return std::string("Error fatal en cat: ") + e.what();

@@ -290,11 +290,11 @@ std::string executeCommand(const std::string& commandLine) {
     } else if (cmd == "mkusr"){
         std::string user = parseParameter(commandLine, "-user");
         std::string pass = parseParameter(commandLine, "-pass");
-        std::string group = parseParameter(commandLine, "-group");
+        std::string group = parseParameter(commandLine, "-grp");
 
         if (user.empty() || pass.empty() || group.empty()) {
-            return "Error: mkusr requiere los parámetros -user, -pass y -group\n"
-                   "Uso: mkusr -user=usuario -pass=contraseña -group=grupo";
+            return "Error: mkusr requiere los parámetros -user, -pass y -grp\n"
+                   "Uso: mkusr -user=usuario -pass=contraseña -grp=grupo";
         }
 
         return CommandMkusr::execute(user, pass, group);
@@ -318,7 +318,7 @@ std::string executeCommand(const std::string& commandLine) {
         return CommandRmusr::execute(user);
     } else if (cmd == "chgrp") {
         std::string user = parseParameter(commandLine, "-user");
-        std::string group = parseParameter(commandLine, "-group");
+        std::string group = parseParameter(commandLine, "-grp");
 
         if (user.empty() || group.empty()) {
             return "Error: chgrp requiere los parámetros -user y -group\n"
