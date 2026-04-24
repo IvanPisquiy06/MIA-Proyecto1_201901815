@@ -38,6 +38,15 @@ struct MBR {
     }
 };
 
+struct Journal {
+    int journal_estado;
+    char journal_tipo_operacion[10];
+    int journal_tipo;
+    char journal_nombre[100];
+    char journal_contenido[100];
+    time_t journal_fecha;
+};
+
 struct EBR {
     char part_status;
     char part_fit;

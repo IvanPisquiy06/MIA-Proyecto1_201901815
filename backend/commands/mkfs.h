@@ -22,7 +22,7 @@ namespace CommandMkfs {
         return false;
     }
 
-    inline std::string execute(const std::string& id, const std::string& type){
+    inline std::string execute(const std::string& id, const std::string& type, const std::string& fs) {
         try {
             if(id.empty()){
                 return "Error: El parámetro -id es obligatorio";
@@ -32,20 +32,31 @@ namespace CommandMkfs {
                 return "Error: El parámetro -type debe ser 'full'";
             }
 
+            std::string fsStr = (fs.empty() ? "2fs" : fs);
+            if(fsStr != "2fs" && fsStr != "3fs"){
+                return "Error: El parámetro -fs debe ser '2fs' o '3fs'";
+            }
+
             MountedPartition partition;
             if (!findPartitionByID(id, partition)) {
                 return "Error: No se encontró la partición montada con ID: " + id;
             }
 
-            int n = floor((partition.size - sizeof(Superblock)) / 
+            int n = 0;
+            if(fsStr == "2fs") {
+                n = floor((partition.size - sizeof(Superblock)) / 
                           (4 + sizeof(Inode) + 3 * sizeof(FolderBlock)));
+            } else if (fsStr == "3fs") {
+                n = floor((partition.size - sizeof(Superblock)) / 
+                          (sizeof(Journal) + 4 + sizeof(Inode) + 3 * sizeof(FileBlock)));
+            }
 
             if (n <= 0) {
                 return "Error: La partición es demasiado pequeña.";
             }
 
             Superblock sb;
-            sb.s_filesystem_type = 2;
+            sb.s_filesystem_type = (fsStr == "2fs") ? 2 : 3;
             sb.s_inodes_count = n;
             sb.s_blocks_count = 3 * n;
             sb.s_free_blocks_count = (3 * n) - 2;
@@ -57,15 +68,35 @@ namespace CommandMkfs {
             sb.s_inode_size = sizeof(Inode);
             sb.s_block_size = sizeof(FolderBlock);
             sb.s_first_ino = 2; 
-            sb.s_first_blo = 2; 
+            sb.s_first_blo = 2;
 
-            sb.s_bm_inode_start = partition.start + sizeof(Superblock);
+            if(fsStr == "2fs"){
+                sb.s_bm_inode_start = partition.start + sizeof(Superblock);
+            } else if (fsStr == "3fs") {
+                sb.s_bm_inode_start = partition.start + sizeof(Superblock) + (n * sizeof(Journal));
+            }
+
             sb.s_bm_block_start = sb.s_bm_inode_start + n; 
             sb.s_inode_start = sb.s_bm_block_start + (3 * n); 
             sb.s_block_start = sb.s_inode_start + (n * sizeof(Inode));
 
             std::fstream file(partition.path, std::ios::in | std::ios::out | std::ios::binary);
             if (!file.is_open()) return "Error: No se pudo abrir el disco.";
+
+            if(fsStr == "3fs"){
+                Journal emptyJournal;
+                emptyJournal.journal_estado = 0;
+                memset(emptyJournal.journal_tipo_operacion, 0, sizeof(emptyJournal.journal_tipo_operacion));
+                emptyJournal.journal_tipo = '-';
+                memset(emptyJournal.journal_nombre, 0, sizeof(emptyJournal.journal_nombre));
+                memset(emptyJournal.journal_contenido, 0, sizeof(emptyJournal.journal_contenido));
+                emptyJournal.journal_fecha = time(nullptr);
+
+                file.seekp(partition.start + sizeof(Superblock), std::ios::beg);
+                for(int i = 0; i < n; i++) {
+                    file.write(reinterpret_cast<char*>(&emptyJournal), sizeof(Journal));
+                }
+            }
 
             char zero = '0';
             file.seekp(sb.s_bm_inode_start, std::ios::beg);
@@ -135,7 +166,8 @@ namespace CommandMkfs {
 
             file.close();
 
-            return "MKFS completado: Sistema de archivos EXT2 creado con /users.txt.";
+            std::string tipoFormateado = (fsStr == "2fs") ? "EXT2" : "EXT3";
+            return "MKFS completado: Sistema de archivos " + tipoFormateado + " creado con /users.txt.";
 
         } catch (const std::exception& e) {
             return std::string("Error fatal en mkfs: ") + e.what();

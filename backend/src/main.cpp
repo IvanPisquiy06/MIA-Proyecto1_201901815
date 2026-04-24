@@ -22,7 +22,16 @@
 #include "../commands/mkfile.h"
 #include "../commands/mkdir.h"
 #include "../commands/rep.h"
-#include "httplib.h"
+#include "../commands/unmount.h"
+#include "../commands/remove.h"
+#include "../commands/rename.h"
+#include "../commands/copy.h"
+#include "../commands/move.h"
+#include "../commands/chown.h"
+#include "../commands/chmod.h"
+#include "../../libs/httplib.h"
+#include "../../libs/json.hpp"
+#include "../commands/find.h"
 
 
 // Función para convertir string a minúsculas
@@ -147,70 +156,30 @@ std::string executeCommand(const std::string& commandLine) {
         std::string path = parseParameter(commandLine, "-path");
         std::string name = parseParameter(commandLine, "-name");
         std::string deleteName = parseParameter(commandLine, "-delete");
+        std::string addParam = parseParameter(commandLine, "-add");
         
-        // Validar parámetros obligatorios
-        if (path.empty()) {
-            return "Error: fdisk requiere parámetro -path\n"
-                   "Uso: fdisk -size=N -unit=[k|m] -path=ruta -type=[P|E|L] -fit=[BF|FF|WF] -name=nombre\n"
-                   "      fdisk -delete=nombre -path=ruta";
-        }
-
-        // Si es operación de eliminación
-        if (!deleteName.empty()) {
-            return CommandFdisk::execute(0, "", path, "", "", deleteName, "");
-        }
-
-        // Si es operación de adición
-        if (name.empty()) {
-            return "Error: fdisk requiere parámetro -name o -delete\n"
-                   "Uso: fdisk -size=N -unit=[k|m] -path=ruta -type=[P|E|L] -fit=[BF|FF|WF] -name=nombre\n"
-                   "      fdisk -delete=nombre -path=ruta";
-        }
-
+        // Parámetros de creación
         std::string sizeStr = parseParameter(commandLine, "-size");
-        if (sizeStr.empty()) {
-            return "Error: fdisk requiere parámetro -size para crear particiones\n"
-                   "Uso: fdisk -size=N -unit=[k|m] -path=ruta -type=[P|E|L] -fit=[BF|FF|WF] -name=nombre";
-        }
-
-        int size;
-        try {
-            size = std::stoi(sizeStr);
-        } catch (const std::exception& e) {
-            return "Error: el valor de size debe ser un número entero positivo";
-        }
-
-        if (size <= 0) {
-            return "Error: el tamaño debe ser un número positivo";
-        }
-
         std::string unit = parseParameter(commandLine, "-unit");
-        if (unit.empty()) {
-            unit = "k";  // Default: kilobytes
-        } else {
-            unit = toLowerCase(unit);
-        }
-
-        if (unit != "k" && unit != "m") {
-            return "Error: unit debe ser 'k' (kilobytes) o 'm' (megabytes)";
-        }
-
         std::string type = parseParameter(commandLine, "-type");
-        if (type.empty()) {
-            type = "P";  // Default: primaria
-        } else {
-            type = toLowerCase(type);
-        }
-
         std::string fit = parseParameter(commandLine, "-fit");
-        if (fit.empty()) {
-            fit = "WF";  // Default: Worst Fit
-        } else {
-            fit = toLowerCase(fit);
+        
+        if (path.empty()) return "Error: fdisk requiere parámetro -path";
+
+        int size = 0;
+        int add = 0;
+        
+        if (!sizeStr.empty()) {
+            try { size = std::stoi(sizeStr); } catch (...) { return "Error: -size debe ser número."; }
+        }
+        
+        if (!addParam.empty()) {
+            try { add = std::stoi(addParam); } catch (...) { return "Error: -add debe ser número."; }
         }
 
-        return CommandFdisk::execute(size, unit, path, type, fit, "", name);
+        if (unit.empty()) unit = "K"; // Default: kilobytes
 
+        return CommandFdisk::execute(size, unit, path, type, fit, deleteName, name, add);
     } else if (cmd == "mount") {
         std::string path = parseParameter(commandLine, "-path");
         std::string name = parseParameter(commandLine, "-name");
@@ -229,17 +198,26 @@ std::string executeCommand(const std::string& commandLine) {
     } else if(cmd == "mkfs") {
         std::string id = parseParameter(commandLine, "-id");
         std::string type = parseParameter(commandLine, "-type");
+        std::string fs = parseParameter(commandLine, "-fs");
 
         if (id.empty()) {
             return "Error: mfks requiere el parámetro -id\n"
-                   "Uso: mfks -id=ID -type=[full]";
+                   "Uso: mfks -id=ID -type=[full] -fs=[2fs|3fs] (opcional)";
         }
 
         if (!type.empty() && type != "full") {
             return "Error: El parámetro -type debe ser 'full'";
         }
 
-        return CommandMkfs::execute(id, type);
+        if (fs.empty()) {
+            fs = "2fs";
+        }
+
+        if (fs != "2fs" && fs != "3fs") {
+            return "Error: El parámetro -fs debe ser '2fs' o '3fs'";
+        }
+
+        return CommandMkfs::execute(id, type, fs);
 
     } else if (cmd == "cat") {
         std::vector<std::string> files;
@@ -358,6 +336,89 @@ std::string executeCommand(const std::string& commandLine) {
         }
 
         return CommandRep::execute(name, path, id, pathFileLs);
+    } else if (cmd == "unmount") {
+        std::string id = parseParameter(commandLine, "-id");
+
+        if (id.empty()) {
+            return "Error: unmount requiere el parámetro -id\n"
+                   "Uso: unmount -id=ID";
+        }
+
+        return CommandUnmount::execute(id);
+    } else if (cmd == "remove") {
+        std::string path = parseParameter(commandLine, "-path");
+
+        if (path.empty()) {
+            return "Error: remove requiere el parámetro -path\n"
+                   "Uso: remove -path=ruta_del_elemento";
+        }
+
+        return CommandRemove::execute(path);
+    } else if (cmd == "rename")
+    {
+        std::string path = parseParameter(commandLine, "-path");
+        std::string name = parseParameter(commandLine, "-name");
+
+        if (path.empty() || name.empty()) {
+            return "Error: rename requiere los parámetros -path y -name\n"
+                   "Uso: rename -path=ruta_del_elemento -name=nombre_nuevo";
+        }
+
+        return CommandRename::execute(path, name);
+    } else if (cmd == "copy") {
+        std::string path = parseParameter(commandLine, "-path");
+        std::string destination = parseParameter(commandLine, "-destination");
+
+        if (path.empty() || destination.empty()) {
+            return "Error: copy requiere los parámetros -path y -destination\n"
+                   "Uso: copy -path=ruta_origen -destination=ruta_destino";
+        }
+
+        return CommandCopy::execute(path, destination);
+    } else if (cmd == "move") {
+        std::string path = parseParameter(commandLine, "-path");
+        std::string destination = parseParameter(commandLine, "-destination");
+
+        if (path.empty() || destination.empty()) {
+            return "Error: move requiere los parámetros -path y -destination\n"
+                   "Uso: move -path=ruta_origen -destination=ruta_destino";
+        }
+
+        return CommandMove::execute(path, destination);
+    } else if (cmd == "find") {
+        std::string path = parseParameter(commandLine, "-path");
+        std::string name = parseParameter(commandLine, "-name");
+
+        if (path.empty() || name.empty()) {
+            return "Error: find requiere los parámetros -path y -name\n"
+                   "Uso: find -path=ruta_inicial -name=nombre_a_buscar";
+        }
+
+        return CommandFind::execute(path, name);
+    } else if (cmd == "chown") {
+        std::string path = parseParameter(commandLine, "-path");
+        std::string user = parseParameter(commandLine, "-user");
+        std::string recursiveStr = parseParameter(commandLine, "-r");
+        bool recursive = !recursiveStr.empty() || commandLine.find("-r") != std::string::npos;
+
+        if (path.empty() || user.empty()) {
+            return "Error: chown requiere los parámetros -path y -user\n"
+                   "Uso: chown -path=ruta_del_elemento -user=nombre_usuario [-r]";
+        }
+
+        return CommandChown::execute(path, user, recursive);
+    } else if (cmd == "chmod") {
+        std::string path = parseParameter(commandLine, "-path");
+        std::string ugo = parseParameter(commandLine, "-ugo"); 
+        
+        bool recursive = (commandLine.find("-r") != std::string::npos || commandLine.find("-R") != std::string::npos);
+        
+        if (path.empty() || ugo.empty()) {
+            return "Error: chmod requiere los parámetros -path y -ugo\n"
+                   "Uso: chmod -path=/ruta/archivo -ugo=777 [-r]";
+        }
+        
+        return CommandChmod::execute(path, ugo, recursive);
     }
     else if (cmd == "exit" || cmd == "quit") {
         return "EXIT";
@@ -368,52 +429,46 @@ std::string executeCommand(const std::string& commandLine) {
     }
 }
 
-int main(int argc, char* argv[]) {
-    srand(time(nullptr));
+using json = nlohmann::json;
 
-    std::cout << "======================================\n";
-    std::cout << "        C++ DISK - BACKEND API        \n";
-    std::cout << "        MIA Proyecto 1 - 2026         \n";
-    std::cout << "======================================\n";
-    std::cout << "Inicializando servidor web...\n";
-
-    // Se crea el servidor
+int main() {
     httplib::Server svr;
 
-    svr.Post("/api/execute", [](const httplib::Request &req, httplib::Response &res) {
+    svr.Post("/api/execute", [](const httplib::Request& req, httplib::Response& res) {
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
         res.set_header("Access-Control-Allow-Headers", "Content-Type");
 
-        std::string commandLine = req.body;
-        
-        if (commandLine.empty()) {
-            res.set_content("Error: Comando vacío.", "text/plain");
+        std::string comando = "";
+        try {
+            auto body_json = json::parse(req.body);
+            comando = body_json["comando"];
+        } catch (const std::exception& e) {
+            res.status = 400;
+            res.set_content("{\"error\": \"Formato JSON inválido\"}", "application/json");
             return;
         }
 
-        std::cout << "\n[Frontend] Comando recibido: " << commandLine << std::endl;
+        std::cout << "Comando recibido desde la web: " << comando << std::endl;
+        
+        std::string salida = executeCommand(comando);
 
-        std::string result = executeCommand(commandLine);
+        json respuesta_json;
+        respuesta_json["salida"] = salida;
 
-        if (result == "EXIT") {
-            result = "Comando de salida recibido. El servidor sigue en línea pero la sesión terminó.";
-        }
-
-        res.set_content(result, "text/plain");
-        std::cout << "[Backend] Respuesta enviada a Angular." << std::endl;
+        res.set_content(respuesta_json.dump(), "application/json");
     });
 
-    svr.Options("/api/execute", [](const httplib::Request &req, httplib::Response &res) {
+    svr.Options("/(.*)", [](const httplib::Request& req, httplib::Response& res) {
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
         res.set_header("Access-Control-Allow-Headers", "Content-Type");
+        res.status = 200;
     });
 
-    std::cout << "Servidor en linea en http://localhost:8080\n";
-    std::cout << "Presiona Ctrl+C en esta terminal para apagarlo.\n";
-    
-    svr.listen("0.0.0.0", 8080);
+    // Arrancar el servidor en el puerto 3000
+    std::cout << "Servidor C++ iniciado en http://localhost:3000" << std::endl;
+    svr.listen("0.0.0.0", 3000);
 
     return 0;
 }
