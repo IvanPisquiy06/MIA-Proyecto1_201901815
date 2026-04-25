@@ -1,3 +1,6 @@
+#ifndef UTILITIES_H
+#define UTILITIES_H
+
 #include <iostream>
 #include <fstream>
 #include <cstring>
@@ -46,3 +49,5 @@ inline void registrarEnJournal(const std::string& path_disco, int part_start, co
     }
     file.close();
 }
+
+#endif // UTILITIES_H

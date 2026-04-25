@@ -436,27 +436,18 @@ int main() {
 
     svr.Post("/api/execute", [](const httplib::Request& req, httplib::Response& res) {
         res.set_header("Access-Control-Allow-Origin", "*");
-        res.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
         res.set_header("Access-Control-Allow-Headers", "Content-Type");
 
-        std::string comando = "";
-        try {
-            auto body_json = json::parse(req.body);
-            comando = body_json["comando"];
-        } catch (const std::exception& e) {
-            res.status = 400;
-            res.set_content("{\"error\": \"Formato JSON inválido\"}", "application/json");
-            return;
-        }
+        std::string comando = req.body;
 
-        std::cout << "Comando recibido desde la web: " << comando << std::endl;
-        
         std::string salida = executeCommand(comando);
 
-        json respuesta_json;
-        respuesta_json["salida"] = salida;
+        json respuesta;
+        respuesta["mensaje"] = salida;
+        
+        respuesta["items"] = json::array(); 
 
-        res.set_content(respuesta_json.dump(), "application/json");
+        res.set_content(respuesta.dump(), "application/json");
     });
 
     svr.Options("/(.*)", [](const httplib::Request& req, httplib::Response& res) {
@@ -466,9 +457,9 @@ int main() {
         res.status = 200;
     });
 
-    // Arrancar el servidor en el puerto 3000
-    std::cout << "Servidor C++ iniciado en http://localhost:3000" << std::endl;
-    svr.listen("0.0.0.0", 3000);
+    std::cout << "Servidor Backend MIA ejecutandose en el puerto 8080..." << std::endl;
+    
+    svr.listen("0.0.0.0", 8080);
 
     return 0;
 }

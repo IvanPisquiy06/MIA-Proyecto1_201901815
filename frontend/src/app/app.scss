@@ -1,134 +1,142 @@
 :host {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-family: 'Courier New', Courier, monospace;
-    background-color: #121212;
-    height: 100vh;
-    margin: 0;
-    padding: 20px;
-    box-sizing: border-box;
+  display: block;
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #121212;
+  height: 100vh;
+  margin: 0;
+  padding: 0; /* Quitamos padding para que ocupe todo */
+  box-sizing: border-box;
 }
 
-.terminal-container {
-    width: 100%;
-    max-width: 1000px;
-    height: 90vh;
-    background-color: #000000;
-    border: 1px solid #333;
-    border-radius: 8px;
-    box-shadow: 0 0 20px rgba(0, 255, 0, 0.15);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+.app-container {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
 }
 
+/* --- ESTILOS COMPARTIDOS --- */
 .header {
-    background-color: #1e1e1e;
-    padding: 12px;
-    border-bottom: 1px solid #333;
-    color: #cccccc;
-    text-align: center;
+  background-color: #1e1e1e;
+  padding: 15px 30px;
+  border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  h1 { margin: 0; font-size: 1.3rem; color: #cccccc; letter-spacing: 1px; }
 }
 
-.header h1 { 
-    margin: 0; 
-    font-size: 1.2rem; 
-    letter-spacing: 1px;
+/* --- PANTALLA 1: CONSOLA --- */
+.console-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.btn-login-nav {
+  background: #00ff00; color: #000; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer;
+  &:hover { background: #00cc00; }
 }
 
 .output-area {
-    flex-grow: 1;
-    flex-shrink: 1;
-    flex-basis: 0;
-    min-height: 0;
-    max-height: 300px;
-    padding: 20px;
-    overflow-y: auto;
-    color: #00ff00;
-}
-
-.output-area pre {
-    margin: 0;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    font-size: 1.05rem;
-    line-height: 1.4;
-}
-
-.output-area::-webkit-scrollbar {
-  width: 10px;
-}
-
-.output-area::-webkit-scrollbar-track {
-  background: #0a0a0a; 
-  border-left: 1px solid #333;
-}
-
-.output-area::-webkit-scrollbar-thumb {
-  background: #005500;
-  border-radius: 5px;
-}
-
-.output-area::-webkit-scrollbar-thumb:hover {
-  background: #00ff00;
+  flex-grow: 1; padding: 20px; overflow-y: auto; color: #00ff00; background: #000;
+  pre { margin: 0; white-space: pre-wrap; font-size: 1.05rem; line-height: 1.4; }
 }
 
 .input-area {
-    display: flex;
-    align-items: center;
-    padding: 15px 20px;
-    background-color: #0a0a0a;
-    border-top: 1px solid #333;
+  display: flex; align-items: center; padding: 15px 20px; background-color: #0a0a0a; border-top: 1px solid #333; gap: 10px;
+  .cmd-symb { color: #00ff00; font-weight: bold; font-size: 1.3rem; }
+  input[type="text"] { flex-grow: 1; background: transparent; border: none; color: #00ff00; font-size: 1.05rem; outline: none; }
+  button { background: #333; color: #00ff00; border: 1px solid #555; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
 }
 
-.prompt-symbol {
-    color: #00ff00;
-    margin-right: 15px;
-    font-weight: bold;
-    font-size: 1.3rem;
+/* --- PANTALLA 2: LOGIN --- */
+.login-screen {
+  display: flex; justify-content: center; align-items: center; height: 100%;
+  background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
 }
 
-input {
-    flex-grow: 1;
-    background: transparent;
-    border: none;
-    color: #00ff00;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 1.05rem;
-    outline: none;
+.login-card {
+  background: #0a0a0a; border: 1px solid #00ff00; border-radius: 8px; padding: 30px; width: 350px;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+  h2 { color: #00ff00; text-align: center; margin-top: 0; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 10px; }
 }
 
-input::placeholder {
-    color: #005500;
+.form-group {
+  margin-bottom: 15px;
+  label { display: block; color: #aaa; margin-bottom: 5px; font-size: 0.9rem; }
+  input { width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #444; color: #00ff00; border-radius: 4px; box-sizing: border-box; outline: none; &:focus { border-color: #00ff00; } }
 }
 
-button {
-    background-color: #1e1e1e;
-    color: #00ff00;
-    border: 1px solid #00ff00;
-    padding: 8px 20px;
-    margin-left: 15px;
-    cursor: pointer;
-    border-radius: 4px;
-    font-family: inherit;
-    font-weight: bold;
-    transition: all 0.2s ease;
+.login-actions {
+  display: flex; gap: 10px; margin-top: 25px;
+  button { flex: 1; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+  .btn-primary { background: #005500; color: #00ff00; border: 1px solid #00ff00; &:hover { background: #00ff00; color: #000; } }
+  .btn-secondary { background: transparent; color: #aaa; border: 1px solid #555; &:hover { border-color: #fff; color: #fff; } }
 }
 
-button:hover { 
-    background-color: #00ff00; 
-    color: #000000;
+/* --- PANTALLA 3: EXPLORADOR --- */
+.explorer-screen {
+  display: flex; flex-direction: column; height: 100%; background: #0a0a0a;
 }
 
-.btn-script {
-  background-color: #0d47a1;
-  color: #ffffff;
-  border: 1px solid #1976d2;
-  margin-left: 10px;
+.btn-logout {
+  background: transparent; color: #ff4444; border: 1px solid #ff4444; padding: 8px 15px; border-radius: 4px; cursor: pointer;
+  &:hover { background: #ff4444; color: #000; }
 }
 
-.btn-script:hover {
-  background-color: #1976d2;
-  color: #ffffff;
+.explorer-body { padding: 30px; flex-grow: 1; overflow-y: auto; }
+
+.breadcrumb {
+  font-size: 1.1rem; color: #888; margin-bottom: 30px;
+  span { color: #00ff00; font-weight: bold; }
+}
+
+.file-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 20px;
+}
+
+.file-card {
+  background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 20px 10px; text-align: center; cursor: pointer; transition: 0.2s;
+  &:hover { background: #333; transform: translateY(-5px); border-color: #00ff00; }
+  .icon { font-size: 3.5rem; margin-bottom: 10px; }
+  .name { color: #ccc; font-size: 0.9rem; word-break: break-word; }
+}
+
+/* --- BOTONES DEL HEADER DE LA CONSOLA --- */
+.nav-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-explorer-nav {
+  background: transparent;
+  color: #00bfff;
+  border: 1px solid #00bfff;
+  padding: 8px 15px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  &:hover { background: rgba(0, 191, 255, 0.1); }
+}
+
+.btn-logout-nav {
+  background: transparent;
+  color: #ff4444;
+  border: 1px solid #ff4444;
+  padding: 8px 15px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  &:hover { background: #ff4444; color: #000; }
+}
+
+.btn-primary:disabled {
+  background: #333;
+  color: #777;
+  border-color: #555;
+  cursor: not-allowed;
 }

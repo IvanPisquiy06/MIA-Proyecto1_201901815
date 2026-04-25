@@ -1,30 +1,82 @@
-<main class="main">
-  <div class="header">
-    <h1>C++ Proyecto 1 - Consola en web</h1>
-  </div>
+<main class="app-container">
 
-  <div class="output-area" #scrollMe>
-    <pre>{{ output() }}</pre>
-  </div>
+  @if (currentScreen === 'console') {
+    <div class="console-screen">
+      <div class="header">
+        <div class="nav-buttons">
+          @if (!isLoggedIn) {
+            <button class="btn-login-nav" (click)="goToLogin()">Iniciar Sesión 👤</button>
+          } @else {
+            <button class="btn-explorer-nav" (click)="goToExplorer()">Ver Archivos 📂</button>
+            <button class="btn-logout-nav" (click)="logout()">Cerrar Sesión ❌</button>
+          }
+        </div>
+      </div>
 
-  <div class="input-area">
-    <span class="cmd-symb">></span>
-    <input
-      type="text"
-      [(ngModel)]="input"
-      (keyup.enter)="executeCommand()"
-      placeholder="Esperando comando..."
-      autofocus
-    />
-    <button (click)="executeCommand()">Ejecutar</button>
-    
-    <input 
-      type="file" 
-      #fileInput 
-      (change)="onFileSelected($event)" 
-      accept=".txt" 
-      style="display: none;"
-    />
-    <button class="btn-script" (click)="triggerFileInput()">📁 Script</button>
-  </div>
+      <div class="output-area" #scrollMe>
+        <pre>{{ output() }}</pre>
+      </div>
+
+      <div class="input-area">
+        <span class="cmd-symb">></span>
+        <input type="text" [(ngModel)]="input" (keyup.enter)="executeCommand()" placeholder="Esperando comando..." autofocus />
+        <button (click)="executeCommand()">Ejecutar</button>
+        <input type="file" #fileInput (change)="onFileSelected($event)" accept=".txt" style="display: none;"/>
+        <button class="btn-script" (click)="triggerFileInput()">📁 Script</button>
+      </div>
+    </div>
+  }
+
+  @else if (currentScreen === 'login') {
+    <div class="login-screen">
+      <div class="login-card">
+        <h2>Ingreso al Sistema</h2>
+        <div class="form-group">
+          <label>Usuario</label>
+          <input type="text" [(ngModel)]="loginData.user" placeholder="root">
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" [(ngModel)]="loginData.pass" placeholder="123">
+        </div>
+        <div class="form-group">
+          <label>ID Partición</label>
+          <input type="text" [(ngModel)]="loginData.id" placeholder="681A">
+        </div>
+        <div class="login-actions">
+          <button class="btn-secondary" (click)="goToConsole()">Cancelar</button>
+          <button class="btn-primary" (click)="onLogin()" [disabled]="isLoading">
+            {{ isLoading ? 'Conectando...' : 'Login' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @else if (currentScreen === 'explorer') {
+    <div class="explorer-screen">
+      <div class="header">
+        <h1>Explorador de Archivos (Ext2/Ext3)</h1>
+        <button class="btn-logout" (click)="logout()">Cerrar Sesión</button>
+      </div>
+      
+      <div class="explorer-body">
+        <div class="breadcrumb">
+          Ruta actual: <span>{{ currentPath }}</span>
+        </div>
+        
+        <div class="file-grid">
+          @for (item of fileSystemItems; track item.name) {
+            <div class="file-card" (click)="openItem(item)">
+              <div class="icon">{{ item.type === 'folder' ? '📁' : '📄' }}</div>
+              <div class="name">{{ item.name }}</div>
+            </div>
+          } @empty {
+            <div class="empty-folder">Carpeta vacía</div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
 </main>
